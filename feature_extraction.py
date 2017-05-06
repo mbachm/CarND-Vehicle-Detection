@@ -2,9 +2,7 @@ import numpy as np
 import cv2
 from skimage.feature import hog
 
-def __read_image_and_convertion_to_color(image, cspace='RGB'):
-	img = cv2.imread(image)
-	feature_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+def __convert_to_colorspace(img, cspace='RGB'):
 	if cspace != 'RGB':
 		if cspace == 'HSV':
 			feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
@@ -19,15 +17,21 @@ def __read_image_and_convertion_to_color(image, cspace='RGB'):
 		else: feature_image = np.copy(img)
 	return feature_image
 
+def __read_image_and_convertion_to_color(image, cspace='RGB'):
+	img = cv2.imread(image)
+	feature_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+	feature_image = __convert_to_colorspace(feature_image, cspace)
+	return feature_image
+
 # Define a function to compute binned color features  
-def __bin_spatial(img, size=(32, 32)):
-	# Use cv2.resize().ravel() to create the feature vector
-	features = cv2.resize(img, size).ravel() 
-	# Return the feature vector
-	return features
+def bin_spatial(img, size=(32, 32)):
+	color1 = cv2.resize(img[:,:,0], size).ravel()
+	color2 = cv2.resize(img[:,:,1], size).ravel()
+	color3 = cv2.resize(img[:,:,2], size).ravel()
+	return np.hstack((color1, color2, color3))
 
 # Define a function to compute color histogram features  
-def __color_hist(img, nbins=32, bins_range=(0, 256)):
+def color_hist(img, nbins=32, bins_range=(0, 256)):
 	# Compute the histogram of the color channels separately
 	channel1_hist = np.histogram(img[:,:,0], bins=nbins, range=bins_range)
 	channel2_hist = np.histogram(img[:,:,1], bins=nbins, range=bins_range)
@@ -38,7 +42,7 @@ def __color_hist(img, nbins=32, bins_range=(0, 256)):
 	return hist_features
 
 # Define a function to return HOG features and visualization
-def __get_hog_features(img, orient, pix_per_cell, cell_per_block, vis=False, feature_vec=True):
+def get_hog_features(img, orient, pix_per_cell, cell_per_block, vis=False, feature_vec=True):
 	# Call with two outputs if vis==True
 	if vis == True:
 		features, hog_image = hog(img, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),
@@ -52,7 +56,7 @@ def __get_hog_features(img, orient, pix_per_cell, cell_per_block, vis=False, fea
 			visualise=vis, feature_vector=feature_vec)
 		return features
 
-def extract(imgs, cspace='RGB', spatial_size=(32, 32),
+def extract_for_training(imgs, cspace='RGB', spatial_size=(32, 32),
 	hist_bins=32, hist_range=(0, 256), orient=9, 
 	pix_per_cell=8, cell_per_block=2, hog_channel=0):
 	# Create a list to append feature vectors to
@@ -61,20 +65,18 @@ def extract(imgs, cspace='RGB', spatial_size=(32, 32),
 	for image_name in imgs:
 		feature_image = __read_image_and_convertion_to_color(image_name, cspace)
 		
-		spatial_features = __bin_spatial(feature_image, size=spatial_size)
-		hist_features = __color_hist(feature_image, nbins=hist_bins, bins_range=hist_range)
+		spatial_features = bin_spatial(feature_image, size=spatial_size)
+		hist_features = color_hist(feature_image, nbins=hist_bins, bins_range=hist_range)
 		
-		# Call get_hog_features() with vis=False, feature_vec=True
 		if hog_channel == 'ALL':
 			hog_features = []
 			for channel in range(feature_image.shape[2]):
-				hog_features.append(__get_hog_features(feature_image[:,:,channel], 
-					orient, pix_per_cell, cell_per_block, 
-					vis=False, feature_vec=True))
+				hog_features.append(get_hog_features(feature_image[:,:,channel],
+					orient, pix_per_cell, cell_per_block, vis=False, feature_vec=False))
 			hog_features = np.ravel(hog_features)        
 		else:
-			hog_features = __get_hog_features(feature_image[:,:,hog_channel], orient, 
-				pix_per_cell, cell_per_block, vis=False, feature_vec=True)
+			hog_features = np.ravel(get_hog_features(feature_image[:,:,hog_channel], orient,
+				pix_per_cell, cell_per_block, vis=False, feature_vec=False))
 		# Append the new feature vector to the features list
 		features.append(np.concatenate((hog_features, spatial_features, hist_features)))
 	return features

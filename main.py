@@ -24,17 +24,17 @@ cell_per_block = 2
 hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
 
 t=time.time()
-car_features = feature_extraction.extract(cars, cspace=colorspace, spatial_size=(spatial, spatial),
-                        hist_bins=histbin, hist_range=(0, 256), orient=orient, pix_per_cell=pix_per_cell, 
-                        cell_per_block=cell_per_block, hog_channel= hog_channel)
-notcar_features = feature_extraction.extract(notcars, cspace=colorspace, spatial_size=(spatial, spatial),
-                        hist_bins=histbin, hist_range=(0, 256), orient=orient, pix_per_cell=pix_per_cell, 
-                        cell_per_block=cell_per_block, hog_channel= hog_channel)
+car_features = feature_extraction.extract_for_training(cars, cspace=colorspace, spatial_size=(spatial, spatial),
+                        hist_bins=histbin, hist_range=(0, 256), orient=orient, pix_per_cell=pix_per_cell,
+                        cell_per_block=cell_per_block, hog_channel=hog_channel)
+notcar_features = feature_extraction.extract_for_training(notcars, cspace=colorspace, spatial_size=(spatial, spatial),
+                        hist_bins=histbin, hist_range=(0, 256), orient=orient, pix_per_cell=pix_per_cell,
+                        cell_per_block=cell_per_block, hog_channel=hog_channel)
 t2 = time.time()
 print(round(t2-t, 2), 'Seconds to extract HOG features...')
 
 ### Train SVC
-X = np.vstack((car_features, notcar_features)).astype(np.float64)                        
+X = np.vstack((car_features, notcar_features)).astype(np.float64)
 X_scaler = StandardScaler().fit(X)
 scaled_X = X_scaler.transform(X)
 y = np.hstack((np.ones(len(car_features)), np.zeros(len(notcar_features))))
@@ -53,5 +53,6 @@ print(round(t2-t, 2), 'Seconds to train SVC...')
 print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
 
 img = cv2.imread('./test_images/test1.jpg')
-searched = image_search.search_for_vehicles(img)
-cv2.imwrite('./output_images/test1.jpg', searched)
+
+searched = image_search.search_for_vehicles(img, svc, X_scaler)
+cv2.imwrite('./output_images/test1_2.jpg', searched)
