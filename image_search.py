@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from scipy.ndimage.measurements import label
 import feature_extraction
+import heatmap_history
 
 ### Box sizes for sliding window search
 xy_sizes = [(32,32), (64, 64), (96, 96), (128, 128), (192, 192), (256, 256)]
@@ -78,31 +79,44 @@ def __apply_threshold(heatmap, threshold):
 	heatmap[heatmap <= threshold] = 0
 	return heatmap
 
-def __draw_labeled_bboxes(img, labels):
+def __get_boxes_of_labels(labels):
+	boxes = []
+	for car_number in range(1, labels[1]+1):
+		nonzero = (labels[0] == car_number).nonzero()
+		nonzeroy = np.array(nonzero[0])
+		nonzerox = np.array(nonzero[1])
+		bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
+		boxes.append(bbox)
+	return boxes
+
+def __draw_labeled_bboxes(img, boxes):
 	""" draws a rectangle on the image for given list of labels """
 	for car_number in range(1, labels[1]+1):
 		nonzero = (labels[0] == car_number).nonzero()
 		nonzeroy = np.array(nonzero[0])
 		nonzerox = np.array(nonzero[1])
 		bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
+		boxes.append(bbox)
 		cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
-	return img
+	return boxes, img
 
-def search_for_vehicles(image, clf, scaler):
+def search_for_vehicles(image, clf, scaler, heatmap_history):
 	""" Searches in the given image for vehicles with the given, trained svm
 		and scaler.
 	"""
+	### TODO: Add Heatmap_history
 	hot_windows = []
 	window_img = np.copy(image)
 	for box_size in xy_sizes:
 		windows = __slide_window(window_img, x_start_stop=[None, None], y_start_stop=[380, 700],
 			xy_window=box_size, xy_overlap=(0.5, 0.5))
-		hot_windows2 = __search_windows(window_img, windows, clf, scaler)
-		hot_windows.extend(hot_windows2)
+		hot_windows.extend(__search_windows(window_img, windows, clf, scaler))
 	heatmap = __generate_heat_map(np.copy(image), hot_windows)
-	heat = __apply_threshold(heatmap, 2)
+	heat = __apply_threshold(heatmap, 1)
 	heat = np.clip(heat, 0, 255)
 	labels = label(heat)
-	heat_mapped_boxes = __draw_labeled_bboxes(np.copy(image), labels)
+	boxes = __get_boxes_of_labels(labels)
+	heatmap_history.add_data(boxes)
+	heat_mapped_boxes = __draw_boxes(np.copy(image), heatmap_history.best_fit_boxes, color=(0, 0, 255), thick=5)
 	search_boxes = __draw_boxes(np.copy(image), hot_windows, color=(0, 255, 0), thick=5)
 	return search_boxes, heat, heat_mapped_boxes

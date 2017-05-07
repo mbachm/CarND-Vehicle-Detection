@@ -3,6 +3,7 @@ import cv2
 import glob
 import feature_extraction
 import image_search
+import heatmap_history
 import time
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
@@ -16,9 +17,9 @@ def set_feature_extraction_parameters():
 	spatial = 32
 	histbin = 32
 	hist_range = (0, 256)
-	colorspace = 'HLS' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-	orient = 11
-	pix_per_cell = 16
+	colorspace = 'YCrCb' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+	orient = 9
+	pix_per_cell = 8
 	cell_per_block = 2
 	hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
 	feature_extraction.set_parameters(cspace=colorspace,
@@ -56,7 +57,7 @@ def run_svm_on_test_images(svc, X_scaler):
 	test_images = glob.glob(path_test_images)
 	for fname in test_images:
 		img = cv2.imread(fname)
-		found_boxes, heatmap, heat_mapped_image = image_search.search_for_vehicles(img, svc, X_scaler)
+		found_boxes, heatmap, heat_mapped_image = image_search.search_for_vehicles(img, svc, X_scaler, heatmap_history.Heatmap_history())
 		### Save origial image, found boxes, heatmap and detected vehicles
 		img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 		heat_mapped_image = cv2.cvtColor(heat_mapped_image, cv2.COLOR_BGR2RGB)
@@ -97,14 +98,16 @@ def test_images_pipeline():
 
 def video_pipeline(image):
 	""" Pipeline for project video """
-	global svc, X_scaler
-	found_boxes, heatmap, heat_mapped_image = image_search.search_for_vehicles(image, svc, X_scaler)
+	global svc, X_scaler, history
+	found_boxes, heatmap, heat_mapped_image = image_search.search_for_vehicles(image, svc, X_scaler, history)
 	return heat_mapped_image
+
+### TODO: Add heatmap_history
 
 set_feature_extraction_parameters()
 training_pipeline()
 test_images_pipeline()
-
+history = heatmap_history.Heatmap_history(queue_length=20)
 output = 'processed_test_video.mp4'
 clip = VideoFileClip('test_video.mp4')
 output_clip = clip.fl_image(video_pipeline)
