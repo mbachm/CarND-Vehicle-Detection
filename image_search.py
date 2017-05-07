@@ -2,14 +2,8 @@ import numpy as np
 import cv2
 import feature_extraction
 
+### Box sizes for sliding window search
 xy_sizes = [(64, 64), (128, 128), (256, 256)]
-spatial = 8
-histbin = 32
-colorspace = 'YUV' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-orient = 11
-pix_per_cell = 16
-cell_per_block = 2
-hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
 
 def __draw_boxes(img, bboxes, color=(0, 255, 0), thick=6):
 	""" draws list of rectangles on given image"""
@@ -57,8 +51,7 @@ def __search_windows(img, windows, clf, scaler):
 	on_windows = []
 	for window in windows:
 		test_img = cv2.resize(img[window[0][1]:window[1][1], window[0][0]:window[1][0]], (64, 64))
-		features = feature_extraction.single_img_features(test_img, colorspace, (spatial, spatial), histbin,
-			(0, 256), orient, pix_per_cell, cell_per_block, hog_channel)
+		features = feature_extraction.single_img_features(test_img)
 		test_features = scaler.transform(np.array(features).reshape(1, -1))
 		prediction = clf.predict(test_features)
 		if prediction == 1:
