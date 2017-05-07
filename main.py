@@ -17,24 +17,25 @@ notcars = glob.glob(path_to_non_car_images)
 # Parameters for feature extraction
 spatial = 8
 histbin = 32
+hist_range = (0, 256)
 colorspace = 'YUV' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
 orient = 11
 pix_per_cell = 16
 cell_per_block = 2
 hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
 
+feature_extraction.set_parameters(cspace=colorspace, s_size=(spatial, spatial),
+	h_bins=histbin, h_range=hist_range, orient=orient, pix_cell=pix_per_cell,
+	cell_block=cell_per_block, h_channel=hog_channel)
+
 t=time.time()
-car_features = feature_extraction.extract(cars, cspace=colorspace, spatial_size=(spatial, spatial),
-                        hist_bins=histbin, hist_range=(0, 256), orient=orient, pix_per_cell=pix_per_cell, 
-                        cell_per_block=cell_per_block, hog_channel= hog_channel)
-notcar_features = feature_extraction.extract(notcars, cspace=colorspace, spatial_size=(spatial, spatial),
-                        hist_bins=histbin, hist_range=(0, 256), orient=orient, pix_per_cell=pix_per_cell, 
-                        cell_per_block=cell_per_block, hog_channel= hog_channel)
+car_features = feature_extraction.extract_for_training(cars)
+notcar_features = feature_extraction.extract_for_training(notcars)
 t2 = time.time()
 print(round(t2-t, 2), 'Seconds to extract HOG features...')
 
 ### Train SVC
-X = np.vstack((car_features, notcar_features)).astype(np.float64)                        
+X = np.vstack((car_features, notcar_features)).astype(np.float64)
 X_scaler = StandardScaler().fit(X)
 scaled_X = X_scaler.transform(X)
 y = np.hstack((np.ones(len(car_features)), np.zeros(len(notcar_features))))
@@ -52,6 +53,12 @@ t2 = time.time()
 print(round(t2-t, 2), 'Seconds to train SVC...')
 print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
 
-img = cv2.imread('./test_images/test1.jpg')
-searched = image_search.search_for_vehicles(img)
-cv2.imwrite('./output_images/test1.jpg', searched)
+t=time.time()
+path_test_images = './test_images/*.jpg'
+test_images = glob.glob(path_test_images)
+for fname in test_images:
+	img = cv2.imread(fname)
+	searched = image_search.search_for_vehicles(img, svc, X_scaler)
+	cv2.imwrite('./output_images/s_'+fname.split('/')[-1], searched)
+t2 = time.time()
+print(round(t2-t, 2), 'Seconds to search in all testimages for vehicles')
