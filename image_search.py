@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import feature_extraction
 
-xy_sizes = [(64, 64), (128, 128), (256, 256), (384, 384)]
+xy_sizes = [(64, 64), (128, 128), (256, 256)]
 spatial = 8
 histbin = 32
 colorspace = 'YUV' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
@@ -34,23 +34,6 @@ def __get_start_stop_and_nperstep_and_nwindows(start_stop=[None, None], shape=72
 	n_windows = np.int((span-n_buffer)/n_pix_per_step)
 	return start_stop, n_pix_per_step, n_windows
 
-# Define a function to extract features from a single image window
-# This function is very similar to extract_features()
-# just for a single image rather than list of images
-def __single_img_features(img):
-	img_features = []
-	feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
-	spatial_features = feature_extraction.bin_spatial(feature_image, size=((spatial, spatial)))
-	img_features.append(spatial_features)
-	hist_features = feature_extraction.color_hist(feature_image, nbins=histbin)
-	img_features.append(hist_features)
-	for channel in range(img.shape[2]):
-		hog_features = feature_extraction.get_hog_features(feature_image[:,:,channel],
-			orient, pix_per_cell, cell_per_block, vis=False, feature_vec=True)
-		img_features.append(hog_features)
-
-	return np.concatenate(img_features)
-
 def __slide_window(img, clf, scaler, x_start_stop=[None, None], y_start_stop=[None, None],
 	xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
 	x_start_stop, nx_pix_per_step, nx_windows = __get_start_stop_and_nperstep_and_nwindows(x_start_stop,
@@ -74,7 +57,8 @@ def __search_windows(img, windows, clf, scaler):
 	on_windows = []
 	for window in windows:
 		test_img = cv2.resize(img[window[0][1]:window[1][1], window[0][0]:window[1][0]], (64, 64))
-		features = __single_img_features(test_img)
+		features = feature_extraction.single_img_features(test_img, colorspace, (spatial, spatial), histbin,
+			(0, 256), orient, pix_per_cell, cell_per_block, hog_channel)
 		test_features = scaler.transform(np.array(features).reshape(1, -1))
 		prediction = clf.predict(test_features)
 		if prediction == 1:
@@ -87,6 +71,8 @@ def search_for_vehicles(image, clf, scaler):
 	for box_size in xy_sizes:
 		windows = __slide_window(window_img, clf, scaler, x_start_stop=[None, None], y_start_stop=[380, 700],
 			xy_window=box_size, xy_overlap=(0.5, 0.5))
-		hot_windows = __search_windows(window_img, windows, clf, scaler)
-		window_img = __draw_boxes(window_img, hot_windows, color=(0, 255, 0), thick=5)
+		hot_windows2 = __search_windows(window_img, windows, clf, scaler)
+		hot_windows.extend(hot_windows2)
+	
+	window_img = __draw_boxes(window_img, hot_windows, color=(0, 255, 0), thick=5)
 	return window_img 
