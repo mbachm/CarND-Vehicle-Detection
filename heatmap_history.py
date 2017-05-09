@@ -45,23 +45,39 @@ class Heatmap_history:
 		else:
 			return box2
 
+	def __calculate_averag(self, pboxes):
+		avg_00 = 0
+		avg_01 = 0
+		avg_10 = 0
+		avg_11 = 0
+		for box in pboxes:
+			avg_00 += box[0][0]
+			avg_01 += box[0][1]
+			avg_10 += box[1][0]
+			avg_11 += box[1][1]
+		avg_00 = int(round(avg_00 / len(pboxes)))
+		avg_01 = int(round(avg_01 / len(pboxes)))
+		avg_10 = int(round(avg_10 / len(pboxes)))
+		avg_11 = int(round(avg_11 / len(pboxes)))
+		return (avg_00, avg_01), (avg_10, avg_11)
+
 	def __set_best_fit_boxes(self):
-		if self.best_fit_boxes:
-			good_heat_maps = []
-			for current_box in self.current_boxes:
-				count = 0
+		good_heat_maps = []
+		for current_box in self.current_boxes:
+			pboxes = []
+			for box_list in self.recent_boxes:
 				biggest_box = current_box
-				for box_list in self.recent_boxes:
-					for box in box_list:
-						if self.__check_box_is_within_margin(current_box, box):
-							biggest_box = self.__return_bigger_box(biggest_box, self.__return_bigger_box(current_box,box))
-							count += 1
-				### Box seems to be appear more than once
-				if count > 2:
-					good_heat_maps.append(biggest_box)
+				for box in box_list:
+					if self.__check_box_is_within_margin(current_box, box):
+						biggest_box = self.__return_bigger_box(biggest_box, self.__return_bigger_box(current_box,box))
+				pboxes.append(biggest_box)
+			### Box seems to be appear more than once
+			if len(pboxes) > 0:
+				good_heat_maps.append(self.__calculate_averag(pboxes))
+
+		if len(good_heat_maps) > 0:
 			self.best_fit_boxes = good_heat_maps
 		else:
-			## initial run. initalize boxes
 			self.best_fit_boxes = self.current_boxes
 
 	def add_data(self, heat_mapped_boxes):

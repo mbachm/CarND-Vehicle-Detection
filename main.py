@@ -94,7 +94,7 @@ def test_images_pipeline():
 	t=time.time()
 	run_svm_on_test_images(svc, X_scaler)
 	t2 = time.time()
-	print(round(t2-t, 2), 'Seconds to search in all testimages for vehicles')
+	print(round(t2-t, 2), 'Seconds to search in all test images for vehicles')
 
 def video_pipeline(image):
 	""" Pipeline for project video """
