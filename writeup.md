@@ -6,14 +6,14 @@
 
 
 [//]: # (Image References)
-[test1]: ./output_images/test1.jpg
-[test2]: ./output_images/test2.jpg
-[test3]: ./output_images/test3.jpg
-[test4]: ./output_images/test4.jpg
-[test5]: ./output_images/test5.jpg
-[test6]: ./output_images/test6.jpg
-[svm]: ./output_images/training.png
-[video1]: ./project_video.mp4
+[test1]: ./output_images/test1.jpg "Test image 1"
+[test2]: ./output_images/test2.jpg "Test image 2"
+[test3]: ./output_images/test3.jpg "Test image 3"
+[test4]: ./output_images/test4.jpg "Test image 4"
+[test5]: ./output_images/test5.jpg "Test image 5"
+[test6]: ./output_images/test6.jpg "Test image 6"
+[svm]: ./output_images/training.png "Perfomance time"
+[video1]: ./project_video.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
 ### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
@@ -71,12 +71,12 @@ The sliding window search returns for all three scales potential vehicle detecti
 
 | Pipeline steps for images |
 |:---:|
-| ![Demonstration of pipeline for image1][image1] |
-| ![Demonstration of pipeline for image2][image2] |
-| ![Demonstration of pipeline for image3][image3] |
-| ![Demonstration of pipeline for image4][image4] |
-| ![Demonstration of pipeline for image5][image5] |
-| ![Demonstration of pipeline for image6][image6] |
+|![Demonstration of pipeline for image1][test1]|
+|![Demonstration of pipeline for image2][test2]|
+|![Demonstration of pipeline for image3][test3]|
+|![Demonstration of pipeline for image4][test4]|
+|![Demonstration of pipeline for image5][test5]|
+|![Demonstration of pipeline for image6][test6]|
 
 As you can see, the heatmap removes removes some false positives (e.g. test image 5). I had to modify the threshold of the heatmap multiply times to get a good result.
 
