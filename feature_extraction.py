@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from skimage.feature import hog
 from scipy.ndimage.measurements import label
-import vehicleDetector
+import vehicle_detector
 from collections import deque
 
 ### Parameters
@@ -52,7 +52,7 @@ def __color_hist(img):
     return hist_features
 
 def __get_hog_features(img, feature_vec=True):
-    """ Function to return HOG features and visualization """
+    """ Function to return HOG features without visualization """
     return hog(img, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),
         cells_per_block=(cell_per_block, cell_per_block), transform_sqrt=True,
         visualise=False, feature_vector=feature_vec)

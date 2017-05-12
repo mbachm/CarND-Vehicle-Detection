@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from moviepy.editor import VideoFileClip
 import feature_extraction as fe
-from vehicleDetector import vehicleDetector
+from vehicle_detector import vehicleDetector
 from collections import deque
 
 def __extract_for_training(imgs):

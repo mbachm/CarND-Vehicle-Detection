@@ -10,6 +10,7 @@ class vehicleDetector:
         # Heat Image for the Last Three Frames
         self.heat_images = deque(maxlen=3)
 
+        # Threshould which should be applied for the heatmap
         self.threshold_to_apply = 13
 
     def add_heatmap_and_threshold(self, draw_img, bbox_list):
