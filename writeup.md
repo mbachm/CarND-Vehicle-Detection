@@ -12,7 +12,7 @@
 [test4]: ./output_images/test4.jpg "Test image 4"
 [test5]: ./output_images/test5.jpg "Test image 5"
 [test6]: ./output_images/test6.jpg "Test image 6"
-[svm]: ./output_images/training.png "Perfomance time"
+[svm]: ./output_images/training.png "Performance time"
 [video1]: ./project_video.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
@@ -51,7 +51,7 @@ This is different from the well performing parameters from the [udacity forum](h
 
 #### 3. Training my classifier using your selected HOG features and color features
 
-I trained a linear SVM using the StandardScaler for standardation of my test features and sklearn train_test_split for training. (see function `__train_svm`, lines 38-50). I use 20 percent of the training set as test_size. The training time is about 85 seconds and I got a test accuracy of 99.24%
+I trained a linear SVM using the StandardScaler for standardisation of my test features and sklearn train_test_split for training. (see function `__train_svm`, lines 38-50). I use 20 percent of the training set as test_size. The training time is about 85 seconds and I got a test accuracy of 99.24%
 
 ![Console log of svm training][svm]
 
@@ -59,13 +59,13 @@ I trained a linear SVM using the StandardScaler for standardation of my test fea
 
 #### Implementation of a sliding window search. How did you decide what scales to search and how much to overlap windows?
 
-The sliding window search is implemtned in the `__find_cars` function in `feature_extraction.py`. I used the code from lesson 35 and just changed `cells_per_step` to `1` to generate more overlaps. Furthermore I ajusted the `__get_hog_features` function as I define parameters my parameters for all of the `feature_extraction.py` functions.
+The sliding window search is implemented in the `__find_cars` function in `feature_extraction.py`. I used the code from lesson 35 and just changed `cells_per_step` to `1` to generate more overlaps. Furthermore I adjusted the `__get_hog_features` function as I define parameters my parameters for all of the `feature_extraction.py` functions.
 
 I used the test code of `lesson 32 Sliding Window Implementation` and some exploration to decided which scales to use in my implementation. My final choices where the scales of `1`, `1.5` and `2.5` with the ystart and yend points of (380, 480), (400, 600) and (500, 700) (line 16) for my sliding window search.
 
 The sliding window search is used in the function `search_for_vehicles` (lines 174-190), which is called from the `video_pipeline` function of the main module (line 98-102).
 
-The sliding window search returns for all three scales potential vehicle detections as a tupel. Afterwards, I apply a heatmap with a threshold of 13 to all potential vehicles (line 182, feature_extraction). The generated heatmap is stored within my `vehicleDetector` class. This class stores the last 3 heatmaps for a better accuracy in the video_pipeline.
+The sliding window search returns for all three scales potential vehicle detections as a tuple. Afterwards, I apply a heatmap with a threshold of 13 to all potential vehicles (line 182, feature_extraction). The generated heatmap is stored within my `vehicleDetector` class. This class stores the last 3 heatmaps for a better accuracy in the video_pipeline.
 
 #### Some examples of test images to demonstrate how my pipeline is working.
 
